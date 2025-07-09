@@ -12,6 +12,7 @@ TaskRouter.post("/create",taskController.addTask)
  TaskRouter.get("/loggedInUserTasks/:id", taskController.getLoggedInUserTasks)
  TaskRouter.put("/updateTask/:id", taskController.upateSingleTask)
  TaskRouter.post("/sendEmail", taskController.sendEmail)
+ TaskRouter.delete("/deleteTask/:id", taskController.deleteTask)
  
 // TaskRouter.put("/updateStaus",taskController.updateMultiplePoles)
 // TaskRouter.delete("/deletePole/:id", taskController.deletePole)
