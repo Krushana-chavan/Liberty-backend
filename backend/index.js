@@ -11,8 +11,6 @@ const path = require("path");
 const { connection } = require("./config/db");
 const { AuthRouter } = require("./Routes/auth.route");
 const { Userrouter } = require("./Routes/user.route");
-const { PlotRouter } = require("./Routes/plot.route");
-const { PoleRouter } = require("./Routes/pole.route");
 const { TaskRouter } = require("./Routes/task.route");
 
 const PORT = process.env.PORT || 5000;
@@ -36,8 +34,7 @@ app.get("/", (req, res) => {
 app.use("/auth", AuthRouter);
 app.use("/task", TaskRouter);
 app.use("/user", Userrouter);
-app.use('/plot',PlotRouter)
-app.use('/pole',PoleRouter)
+
 
 app.listen(PORT, async () => {
   try {
