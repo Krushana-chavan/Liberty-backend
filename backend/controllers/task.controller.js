@@ -16,7 +16,7 @@ const sendEmail = async ({ to, subject, message }) => {
             secure: false,
             auth: {
                 user: 'krushnachavan29@gmail.com',           // Your full Gmail address
-                pass:"bbuc oygh vigg htbw", // Your App Password
+                pass:process.env.PASS_KEY
             },
         });
 
