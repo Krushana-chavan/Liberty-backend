@@ -36,6 +36,10 @@ const TaskSchema = new mongoose.Schema(
       enum: ["Pending", "Completed"],
       default: "Pending",
     },
+    reminder: {
+      type: String,
+        enum: ["5m", "10m", "15m", "30m", "1h", "1d","None"],
+    },
     isRecurring: { type: Boolean, default: false },
     recurringType: {
       type: String,

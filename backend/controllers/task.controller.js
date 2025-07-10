@@ -39,74 +39,101 @@ const sendEmail = async ({ to, subject, message }) => {
 };
 // Create a new task
 const addTask = async (req, res) => {
-    const {
-        title,
-        company,
-        userId,
-        type,
-        date,
-        time,
-        color,
-        notes,
-        assignees,
-        workflowStatus,
-        completionStatus,
-        isRecurring,
-        recurringType,
-    } = req.body;
+  const {
+    title,
+    company,
+    userId,
+    type,
+    date,
+    time,
+    color,
+    notes,
+    assignees,
+    workflowStatus,
+    completionStatus,
+    isRecurring,
+    recurringType,
+    reminder,
+  } = req.body;
 
-    try {
-        const newTask = new taskModel({
-            title,
-            company,
-            type,
-            date,
-            time,
-            userId,
-            color,
-            notes,
-            assignees,
-            workflowStatus,
-            completionStatus,
-            isRecurring,
-            recurringType,
-        });
-
-
-        if (!title || !company || !userId) {
-            return res.status(400).json({ error: `Title, company, and userId are required fields.` });
-        }
-        if (assignees.length > 0) {
-            assignees.forEach(async (assignee) => {
-                const userInfo = await AuthModel.findById(assignee);
-                console.log("Assignee Info:", userInfo);
-                if (!userInfo) {
-                    return res.status(400).json({ error: `Assignee with ID ${assignee} does not exist.` });
-                }
-
-
-                sendEmail({
-                    to: userInfo.email,
-                    subject: `New Task Assigned: ${title}`,
-                    message: `You have been assigned a new task: ${title} at ${company}.
-        Please check your task list for more details.`,
-                }).catch((error) => {
-                    console.error("Error sending email:", error);
-                    return res.status(500).json({ error: "Failed to send notification email" });
-                });
-               
-
-            })
-
-
-        }
-        await newTask.save();
-        res.status(200).json({ msg: "Task created successfully!" });
-    } catch (error) {
-        console.error("Error creating task:", error);
-        res.status(500).json({ error: "Failed to create task" });
+  try {
+    if (!title || !company || !userId) {
+      return res.status(400).json({ error: "Title, company, and userId are required fields." });
     }
+
+    const newTask = new taskModel({
+      title,
+      company,
+      type,
+      date,
+      time,
+      userId,
+      color,
+      notes,
+      assignees,
+      workflowStatus,
+      completionStatus,
+      isRecurring,
+      recurringType,
+      reminder,
+    });
+
+    await newTask.save();
+
+    if (assignees.length > 0) {
+      assignees.forEach(async (assignee) => {
+        const userInfo = await AuthModel.findById(assignee);
+        if (userInfo) {
+          sendEmail({
+            to: userInfo.email,
+            subject: `New Task Assigned: ${title}`,
+            message: `You have been assigned a new task: ${title} at ${company}.`,
+          });
+        }
+      });
+    }
+const getReminderOffset = (reminderValue) => {
+  const map = {
+    "5m": 5 * 60 * 1000,
+    "10m": 10 * 60 * 1000,
+    "15m": 15 * 60 * 1000,
+    "30m": 30 * 60 * 1000,
+    "1h": 60 * 60 * 1000,
+    "1d": 24 * 60 * 60 * 1000,
+  };
+  return map[reminderValue] || 0;
 };
+
+    // Reminder scheduling
+    const reminderOffset = getReminderOffset(reminder);
+    if( reminderOffset !== 0) {
+    const taskDateTime = new Date(`${date}T${time}`);
+    const reminderTime = new Date(taskDateTime.getTime() - reminderOffset);
+    const currentTime = new Date();
+    const delay = reminderTime - currentTime;
+
+    if (delay > 0 && assignees.length > 0) {
+      setTimeout(() => {
+        assignees.forEach(async (assignee) => {
+          const userInfo = await AuthModel.findById(assignee);
+          if (userInfo) {
+            sendEmail({
+              to: userInfo.email,
+              subject: `⏰ Reminder: ${title}`,
+              message: `Reminder: Your task "${title}" is scheduled for ${date} ${time}.`,
+            });
+          }
+        });
+      }, delay);
+    }
+    }
+    res.status(200).json({ msg: "Task created successfully!" });
+  } catch (error) {
+    console.error("Error creating task:", error);
+    res.status(500).json({ error: "Failed to create task" });
+  }
+};
+
 
 // Get all tasks
 const getTasks = async (req, res) => {
